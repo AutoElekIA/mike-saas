@@ -1,0 +1,417 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ============================================
+   VARIABLES DE TEMA (CLARO Y OSCURO)
+   ============================================ */
+
+:root {
+  /* Colores base */
+  --background: #f1f5f9;
+  --foreground: #0f172a;
+  
+  /* Tarjetas */
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  
+  /* Sidebar */
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e2e8f0;
+  --sidebar-text: #334155;
+  --sidebar-hover: #f1f5f9;
+  --sidebar-active: #eff6ff;
+  --sidebar-active-text: #2563eb;
+  
+  /* Texto */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  /* Inputs */
+  --input-bg: #ffffff;
+  --input-border: #e2e8f0;
+  --input-focus: #2563eb;
+  
+  /* Badges */
+  --badge-blue-bg: #eff6ff;
+  --badge-blue-text: #1d4ed8;
+  --badge-green-bg: #f0fdf4;
+  --badge-green-text: #15803d;
+  --badge-yellow-bg: #fefce8;
+  --badge-yellow-text: #a16207;
+  --badge-red-bg: #fef2f2;
+  --badge-red-text: #b91c1c;
+  
+  /* Transiciones */
+  --theme-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+  /* Colores base */
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  
+  /* Tarjetas */
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  
+  /* Sidebar */
+  --sidebar-bg: #0f172a;
+  --sidebar-border: #1e293b;
+  --sidebar-text: #94a3b8;
+  --sidebar-hover: #1e293b;
+  --sidebar-active: #1e293b;
+  --sidebar-active-text: #60a5fa;
+  
+  /* Texto */
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  /* Inputs */
+  --input-bg: #0f172a;
+  --input-border: #334155;
+  --input-focus: #3b82f6;
+  
+  /* Badges */
+  --badge-blue-bg: #1e3a5f;
+  --badge-blue-text: #93c5fd;
+  --badge-green-bg: #14532d;
+  --badge-green-text: #86efac;
+  --badge-yellow-bg: #713f12;
+  --badge-yellow-text: #fcd34d;
+  --badge-red-bg: #7f1d1d;
+  --badge-red-text: #fca5a5;
+}
+
+/* ============================================
+   ESTILOS GLOBALES
+   ============================================ */
+
+* {
+  transition: background-color var(--theme-transition),
+              border-color var(--theme-transition),
+              color var(--theme-transition),
+              box-shadow var(--theme-transition);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--text-primary);
+  background: var(--background);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  transition: background-color var(--theme-transition),
+              color var(--theme-transition);
+}
+
+/* ============================================
+   CLASES UTILITARIAS CON VARIABLES CSS
+   ============================================ */
+
+/* Fondo de página */
+.bg-background {
+  background-color: var(--background);
+}
+
+/* Tarjetas */
+.bg-card {
+  background-color: var(--card-bg);
+}
+
+.border-card {
+  border-color: var(--card-border);
+}
+
+.shadow-card {
+  box-shadow: var(--card-shadow);
+}
+
+/* Texto */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* Sidebar */
+.bg-sidebar {
+  background-color: var(--sidebar-bg);
+}
+
+.border-sidebar {
+  border-color: var(--sidebar-border);
+}
+
+.text-sidebar {
+  color: var(--sidebar-text);
+}
+
+.hover-sidebar:hover {
+  background-color: var(--sidebar-hover);
+}
+
+.active-sidebar {
+  background-color: var(--sidebar-active);
+  color: var(--sidebar-active-text);
+}
+
+/* Badges */
+.badge-blue {
+  background-color: var(--badge-blue-bg);
+  color: var(--badge-blue-text);
+}
+
+.badge-green {
+  background-color: var(--badge-green-bg);
+  color: var(--badge-green-text);
+}
+
+.badge-yellow {
+  background-color: var(--badge-yellow-bg);
+  color: var(--badge-yellow-text);
+}
+
+.badge-red {
+  background-color: var(--badge-red-bg);
+  color: var(--badge-red-text);
+}
+
+/* Inputs */
+.input-theme {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-primary);
+}
+
+.input-theme:focus {
+  border-color: var(--input-focus);
+  ring-color: var(--input-focus);
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* ============================================
+   ANIMACIONES
+   ============================================ */
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ============================================
+   SKELETON LOADING
+   ============================================ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--card-border) 25%,
+    var(--text-muted) 50%,
+    var(--card-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ============================================
+   OVERRIDES PARA COMPONENTES EXISTENTES
+   ============================================ */
+
+/* En lugar de usar .dark .clase, usamos variables CSS */
+.bg-white {
+  background-color: var(--card-bg) !important;
+}
+
+.bg-gray-50 {
+  background-color: var(--background) !important;
+}
+
+.bg-gray-100 {
+  background-color: var(--card-border) !important;
+}
+
+.text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+.border-gray-200 {
+  border-color: var(--card-border) !important;
+}
+
+.border-gray-300 {
+  border-color: var(--card-border) !important;
+}
+
+.shadow {
+  box-shadow: var(--card-shadow) !important;
+}
+
+.shadow-sm {
+  box-shadow: var(--card-shadow) !important;
+}
+
+.shadow-lg {
+  box-shadow: var(--card-shadow) !important;
+}
+
+/* Hover */
+.hover\:bg-gray-50:hover {
+  background-color: var(--sidebar-hover) !important;
+}
+
+.hover\:bg-gray-100:hover {
+  background-color: var(--sidebar-hover) !important;
+}
+
+/* Badges con variables CSS */
+.bg-blue-100 {
+  background-color: var(--badge-blue-bg) !important;
+}
+
+.text-blue-800 {
+  color: var(--badge-blue-text) !important;
+}
+
+.bg-green-100 {
+  background-color: var(--badge-green-bg) !important;
+}
+
+.text-green-800 {
+  color: var(--badge-green-text) !important;
+}
+
+.bg-yellow-100 {
+  background-color: var(--badge-yellow-bg) !important;
+}
+
+.text-yellow-800 {
+  color: var(--badge-yellow-text) !important;
+}
+
+.bg-red-100 {
+  background-color: var(--badge-red-bg) !important;
+}
+
+.text-red-800 {
+  color: var(--badge-red-text) !important;
+}
+
+/* Sidebar específico */
+.bg-gradient-to-r.from-blue-600.to-blue-700 {
+  background-image: linear-gradient(to right, #2563eb, #1d4ed8) !important;
+}
+
+[data-theme="dark"] .bg-gradient-to-r.from-blue-600.to-blue-700 {
+  background-image: linear-gradient(to right, #1e3a5f, #1e40af) !important;
+}
+
+/* Inputs */
+input, textarea, select {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-primary) !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--input-focus) !important;
+  outline: none !important;
+  ring: 2px solid var(--input-focus) !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted) !important;
+}

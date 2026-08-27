@@ -1,0 +1,626 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// MODELOS FLEXIBLES PARA CUALQUIER TIPO DE CONDOMINIO
+// ==========================================
+
+model Tenant {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  logoUrl       String?
+  settings      Json?     @default("{}")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  condominiums  Condominium[]
+  users         User[]
+  payments      Payment[]
+
+  @@map("tenants")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String?
+  role          UserRole  @default(RESIDENT)
+  tenantId      String?
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  properties    PropertyOwner[]
+  reservations  Reservation[]
+  incidents     Incident[] @relation("reporter")
+  assignedIncidents Incident[] @relation("assignee")
+  votes         Vote[]
+  assemblyAttendees AssemblyAttendee[]
+  administrationRoles AdministrationRole[]
+  minutes       Minute[]  @relation("creator")
+
+  @@map("users")
+}
+
+// ==========================================
+// CONDOMINIO - NODO PRINCIPAL
+// ==========================================
+
+model Condominium {
+  id            String    @id @default(cuid())
+  name          String
+  address       String?
+  taxId         String?
+  settings      Json?     @default("{}")
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  buildings     Building[]
+  zones         Zone[]
+  lots          Lot[]
+  properties    Property[]
+  commonAreas   CommonArea[]
+  expenses      Expense[]
+  announcements Announcement[]
+  incidents     Incident[]
+  assemblies    Assembly[]
+  expenseCategories ExpenseCategory[]
+  administrationPeriods AdministrationPeriod[]
+  paymentConfigs PaymentConfig[]
+  minutes       Minute[]
+
+  @@map("condominiums")
+}
+
+// ==========================================
+// EDIFICIO/TORRE - Para condominios verticales
+// ==========================================
+
+model Building {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  floors        Int?
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  units         Unit[]
+  lots          Lot[]
+
+  @@map("buildings")
+}
+
+// ==========================================
+// ZONA/SECCIÓN - Para condominios horizontales
+// ==========================================
+
+model Zone {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  lots          Lot[]
+
+  @@map("zones")
+}
+
+// ==========================================
+// LOTE/TERRENO - Para condominios horizontales o mixtos
+// ==========================================
+
+model Lot {
+  id            String    @id @default(cuid())
+  code          String
+  areaM2        Float?
+  address       String?
+  maintenanceFee Float?
+  zoneId        String?
+  zone          Zone?     @relation(fields: [zoneId], references: [id])
+  buildingId    String?
+  building      Building? @relation(fields: [buildingId], references: [id])
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  properties    Property[]
+
+  @@map("lots")
+}
+
+// ==========================================
+// UNIDAD - Para edificios verticales
+// ==========================================
+
+model Unit {
+  id            String    @id @default(cuid())
+  code          String
+  floor         Int?
+  areaM2        Float?
+  type          UnitType  @default(APARTMENT)
+  maintenanceFee Float?
+  buildingId    String
+  building      Building  @relation(fields: [buildingId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  properties    Property[]
+
+  @@map("units")
+}
+
+// ==========================================
+// PROPIEDAD - Entidad unificada (puede ser Unit o Lot)
+// ==========================================
+
+model Property {
+  id            String    @id @default(cuid())
+  code          String
+  areaM2        Float?
+  maintenanceFee Float?
+  type          PropertyType @default(UNIT)
+  photoUrl      String?
+  
+  unitId        String?
+  unit          Unit?     @relation(fields: [unitId], references: [id])
+  lotId         String?
+  lot           Lot?      @relation(fields: [lotId], references: [id])
+  
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  owners        PropertyOwner[]
+  payments      Payment[]
+
+  @@map("properties")
+}
+
+// ==========================================
+// PERSONA - Propietario o residente
+// ==========================================
+
+model Person {
+  id            String    @id @default(cuid())
+  fullName      String
+  email         String?
+  phone         String?
+  documentId    String?
+  photoUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  properties    PropertyOwner[]
+
+  @@map("persons")
+}
+
+// ==========================================
+// RELACIÓN PROPIEDAD-PERSONA
+// ==========================================
+
+model PropertyOwner {
+  id            String    @id @default(cuid())
+  propertyId    String
+  property      Property  @relation(fields: [propertyId], references: [id])
+  personId      String
+  person        Person    @relation(fields: [personId], references: [id])
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id])
+  status        OwnerStatus @default(OWNER)
+  ownershipSince DateTime @default(now())
+  percentage    Float?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  payments      Payment[]
+
+  @@map("property_owners")
+}
+
+// ==========================================
+// PAGOS - CON CAMPOS DE VERIFICACIÓN DE COMPROBANTES
+// ==========================================
+
+model Payment {
+  id            String    @id @default(cuid())
+  amount        Float
+  status        PaymentStatus @default(PENDING)
+  dueDate       DateTime
+  paidAt        DateTime?
+  paymentMethod PaymentMethod?
+  reference     String?
+  voucherUrl    String?   // URL del voucher JPG/PDF
+  voucherVerified Boolean  @default(false)  // Si el comprobante fue verificado
+  verifiedBy    String?   // ID del admin que verificó
+  verifiedAt    DateTime? // Fecha de verificación
+  verificationNotes String? // Notas de la verificación
+  propertyOwnerId String
+  propertyOwner PropertyOwner @relation(fields: [propertyOwnerId], references: [id])
+  propertyId    String?
+  property      Property? @relation(fields: [propertyId], references: [id])
+  tenantId      String?
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("payments")
+}
+
+// ==========================================
+// ÁREAS COMUNES
+// ==========================================
+
+model CommonArea {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  maxCapacity   Int?
+  pricePerHour  Float?
+  requiresApproval Boolean @default(true)
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  reservations  Reservation[]
+
+  @@map("common_areas")
+}
+
+model Reservation {
+  id            String    @id @default(cuid())
+  startTime     DateTime
+  endTime       DateTime
+  status        ReservationStatus @default(PENDING)
+  notes         String?
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  commonAreaId  String
+  commonArea    CommonArea @relation(fields: [commonAreaId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("reservations")
+}
+
+// ==========================================
+// INCIDENCIAS
+// ==========================================
+
+model Incident {
+  id            String    @id @default(cuid())
+  title         String
+  description   String
+  photoUrl      String?
+  status        IncidentStatus @default(PENDING)
+  priority      IncidentPriority @default(MEDIUM)
+  reportedBy    String
+  reporter      User      @relation("reporter", fields: [reportedBy], references: [id])
+  assignedTo    String?
+  assignedUser  User?     @relation("assignee", fields: [assignedTo], references: [id])
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  propertyId    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("incidents")
+}
+
+// ==========================================
+// ANUNCIOS Y ASAMBLEAS
+// ==========================================
+
+model Announcement {
+  id            String    @id @default(cuid())
+  title         String
+  content       String
+  publishedAt   DateTime  @default(now())
+  expiresAt     DateTime?
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("announcements")
+}
+
+model Assembly {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  date          DateTime
+  location      String?
+  status        AssemblyStatus @default(SCHEDULED)
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  votingItems   VotingItem[]
+  attendees     AssemblyAttendee[]
+
+  @@map("assemblies")
+}
+
+model VotingItem {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  type          VotingType @default(SIMPLE_MAJORITY)
+  status        VotingStatus @default(PENDING)
+  assemblyId    String
+  assembly      Assembly  @relation(fields: [assemblyId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  votes         Vote[]
+  options       VotingOption[]
+
+  @@map("voting_items")
+}
+
+model VotingOption {
+  id            String    @id @default(cuid())
+  text          String
+  votingItemId  String
+  votingItem    VotingItem @relation(fields: [votingItemId], references: [id])
+
+  votes         Vote[]
+
+  @@map("voting_options")
+}
+
+model Vote {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  votingItemId  String
+  votingItem    VotingItem @relation(fields: [votingItemId], references: [id])
+  votingOptionId String
+  votingOption  VotingOption @relation(fields: [votingOptionId], references: [id])
+  createdAt     DateTime  @default(now())
+
+  @@map("votes")
+}
+
+model AssemblyAttendee {
+  id            String    @id @default(cuid())
+  assemblyId    String
+  assembly      Assembly  @relation(fields: [assemblyId], references: [id])
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  attended      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  @@map("assembly_attendees")
+}
+
+// ==========================================
+// CONTABILIDAD
+// ==========================================
+
+model Expense {
+  id            String    @id @default(cuid())
+  amount        Float
+  date          DateTime  @default(now())
+  description   String
+  receiptUrl    String?
+  categoryId    String
+  category      ExpenseCategory @relation(fields: [categoryId], references: [id])
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("expenses")
+}
+
+model ExpenseCategory {
+  id            String    @id @default(cuid())
+  name          String
+  type          CategoryType @default(EXPENSE)
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  expenses      Expense[]
+
+  @@map("expense_categories")
+}
+
+// ==========================================
+// ADMINISTRACIÓN - ROLES ROTATIVOS POR SEMESTRE
+// ==========================================
+
+model AdministrationPeriod {
+  id            String    @id @default(cuid())
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  semester      String    // Ej: "2025-1" (primer semestre 2025)
+  startDate     DateTime
+  endDate       DateTime
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  roles         AdministrationRole[]
+
+  @@map("administration_periods")
+}
+
+model AdministrationRole {
+  id            String    @id @default(cuid())
+  periodId      String
+  period        AdministrationPeriod @relation(fields: [periodId], references: [id])
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  roleType      AdministrationRoleType @default(TREASURER)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("administration_roles")
+}
+
+// ==========================================
+// CONFIGURACIÓN DE PAGOS POR CONDOMINIO
+// ==========================================
+
+model PaymentConfig {
+  id            String    @id @default(cuid())
+  condominiumId String    @unique
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  baseAmount    Float     @default(2000)
+  earlyPaymentAmount Float @default(2000)
+  latePaymentAmount Float  @default(2200)
+  dueDayOfMonth Int       @default(10)  // Día de vencimiento
+  earlyPaymentDays Int    @default(10)  // Días de descuento por pronto pago
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("payment_configs")
+}
+
+// ==========================================
+// MINUTAS Y AVISOS CON PDF
+// ==========================================
+
+model Minute {
+  id            String    @id @default(cuid())
+  title         String
+  content       String
+  fileUrl       String?   // URL del PDF
+  meetingDate   DateTime
+  condominiumId String
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  createdBy     String
+  creator       User      @relation("creator", fields: [createdBy], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("minutes")
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  BOARD_MEMBER
+  RESIDENT
+  GUEST
+}
+
+enum CondominiumType {
+  VERTICAL
+  HORIZONTAL
+  MIXED
+  FUTURE
+}
+
+enum PropertyType {
+  UNIT
+  LOT
+}
+
+enum UnitType {
+  APARTMENT
+  PENTHOUSE
+  COMMERCIAL
+  PARKING
+  STORAGE
+}
+
+enum OwnerStatus {
+  OWNER
+  TENANT
+  BOTH
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CARD
+  SPEI
+  DEPOSIT
+}
+
+enum ReservationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+enum IncidentStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum IncidentPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AssemblyStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum VotingType {
+  SIMPLE_MAJORITY
+  QUALIFIED_MAJORITY
+  UNANIMOUS
+}
+
+enum VotingStatus {
+  PENDING
+  OPEN
+  CLOSED
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+enum AdministrationRoleType {
+  TREASURER      // Tesorero
+  MAINTENANCE    // Mantenimiento
+  SECRETARY      // Secretario
+  PRESIDENT      // Presidente
+}
