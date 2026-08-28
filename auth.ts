@@ -5,9 +5,9 @@ import { prisma } from "@/lib/prisma";
 
 export const authOptions = {
   session: {
-    strategy: "jwt" as const, // Necesario para que TypeScript lo acepte
+    strategy: "jwt" as const, // ¡Esto es lo que faltaba!
   },
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -16,14 +16,14 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log("🚀 LOG DE PRUEBA: Entrando a authorize");
+        console.log("🔍 Buscando usuario: ", credentials.email);
 
         if (!credentials?.email || !credentials?.password) {
           console.log("❌ Faltan credenciales");
           return null;
         }
 
-        console.log("🔍 Buscando usuario:", credentials.email);
+        console.log("🔍 Buscando usuario: ", credentials.email);
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
